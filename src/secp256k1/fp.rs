@@ -2,13 +2,14 @@ use core::convert::TryInto;
 use core::fmt;
 use core::ops::{Add, Mul, Neg, Sub};
 
-use ff::PrimeField;
+use ff::{PrimeField, PrimeFieldBits};
 use rand::RngCore;
 use subtle::{Choice, ConditionallySelectable, ConstantTimeEq, CtOption};
 
 use pasta_curves::arithmetic::{FieldExt, Group, SqrtRatio};
 
 use crate::arithmetic::{adc, mac, sbb};
+use zeroize::DefaultIsZeroes;
 
 /// This represents an element of $\mathbb{F}_p$ where
 ///
@@ -244,6 +245,22 @@ impl SqrtRatio for Fp {
         tmp.0[0] as u32
     }
 }
+
+impl PrimeFieldBits for Fp {
+    type ReprBits = [u8; 32];
+
+    fn to_le_bits(&self) -> ff::FieldBits<Self::ReprBits> {
+        self.to_bytes().into()
+    }
+
+    fn char_le_bits() -> ff::FieldBits<Self::ReprBits> {
+        let mut bytes = MODULUS.to_bytes();
+        bytes.reverse();
+        bytes.into()
+    }
+}
+
+impl DefaultIsZeroes for Fp {}
 
 #[cfg(test)]
 mod test {
